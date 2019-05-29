@@ -17,7 +17,7 @@ int main(int argc, char** argv) {
   
   int i;
   
-  printf("introduce numero del 1 al 4\n1-blur\n2-black and white filter\n3-matriz de convolucion\n4-pene\n");
+  printf("introduce numero del 1 al 4\n1-blur\n2-black and white filter\n3-matriz de convolucion\n4-exit\n");
   
   scanf("%d", &i);
 

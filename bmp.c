@@ -3,7 +3,9 @@
 #include <stdint.h>
 #include <string.h>
 #include <math.h>
+#include <time.h>
 #include "bmp.h"
+
 
 unsigned char *LoadBMP(char *filename, bmpInfoHeader *bInfoHeader, int i) {
   FILE *f;
@@ -11,7 +13,8 @@ unsigned char *LoadBMP(char *filename, bmpInfoHeader *bInfoHeader, int i) {
   unsigned char *imgdata;   /* datos de imagen */
   unsigned char *imgdata2;
   uint16_t type;            /* 2 bytes identificativos */
-
+  clock_t t;
+  
   f=fopen (filename, "r");
   if (!f) { /* Si no podemos leer, no hay imagen */
     printf("NO se puede abrir el fichero %s\n", filename);
@@ -53,21 +56,39 @@ unsigned char *LoadBMP(char *filename, bmpInfoHeader *bInfoHeader, int i) {
   fread(imgdata, bInfoHeader->imgsize,1, f);
   
   if (i == 1) {
-      blur(imgdata, bInfoHeader);
+      t = clock(); 
+      blur(imgdata, bInfoHeader); 
+      t = clock() - t; 
+      double time_taken = ((double)t)/CLOCKS_PER_SEC;
+      printf("blur took %f seconds to execute \n", time_taken);
   }
   else if (i == 2) {
+      t = clock();
       BW(imgdata, bInfoHeader);
+      t = clock() - t; 
+      double time_taken = ((double)t)/CLOCKS_PER_SEC;
+      printf("Black&White took %f seconds to execute \n", time_taken);
   }
   else if (i == 3) {
-      ConvMat(imgdata, imgdata2, bInfoHeader);
+      int j;
+      printf("elige el filtro mediante matriz de convolución:\n 1-resalto de bordes\n2-perfilado\n3-blur gaussiano\n4- sin cambios\n");
+      scanf("%d", &j);
+      t = clock();
+      ConvMat(imgdata, imgdata2, bInfoHeader, j);
+      t = clock() - t; 
+      double time_taken = ((double)t)/CLOCKS_PER_SEC;
+      printf("ConvMatrix took %f seconds to execute \n", time_taken);
       imgdata = imgdata2;
   }
 
   /* Cerramos el fichero */
   fclose(f);
+  
+  printf("el resultado se encuentra en el fichero aux.bmp");
 
   /* Devolvemos la imagen */
   return imgdata;
+  
 }
 
 bmpInfoHeader *createInfoHeader(uint32_t width, uint32_t height, uint32_t ppp) {
@@ -125,6 +146,8 @@ void blur(unsigned char *imgdata, bmpInfoHeader *bInfoHeader) {
     int n,x,xx,y,yy,ile, avgR,avgB,avgG,B,G,R;
     int blurSize = 10;
     
+    //KERNEL
+    
     for(xx = 0; xx < bInfoHeader->width; xx++)
 {
     for(yy = 0; yy < bInfoHeader->height; yy++)
@@ -164,6 +187,7 @@ void BW(unsigned char *imgdata, bmpInfoHeader *bInfoHeader) {
     float color;
     int x, y;
 
+        //KERNEL
         for(x = 0; x < bInfoHeader->width; x++)
         {
             for(y = 0; y < bInfoHeader->height; y++)
@@ -184,11 +208,59 @@ void BW(unsigned char *imgdata, bmpInfoHeader *bInfoHeader) {
 
 }
 
-void ConvMat(unsigned char *imgdata, unsigned char *imgdata2, bmpInfoHeader *bInfoHeader) {
+void ConvMat(unsigned char *imgdata, unsigned char *imgdata2, bmpInfoHeader *bInfoHeader, int j) {
     
     int xx, yy, x, y;
     float avgB, avgR, avgG;
-    float mat[3][3] = {0., 0., 0., 0., 1., 0., 0., 0., 0.};
+    float mat[3][3];
+    if (j == 1) {
+        BW(imgdata2, bInfoHeader);
+        BW(imgdata, bInfoHeader);
+        mat[0][0] = -1.;
+        mat[0][1] = -1.;
+        mat[0][2] = -1.;
+        mat[1][0] = -1.;
+        mat[1][1] = 8.;
+        mat[1][2] = -1.;
+        mat[2][0] = -1.;
+        mat[2][1] = -1.;
+        mat[2][2] = -1.;
+    }
+    else if (j == 2) {
+        mat[0][0] = 0.;
+        mat[0][1] = -1.;
+        mat[0][2] = 0.;
+        mat[1][0] = -1.;
+        mat[1][1] = 5.;
+        mat[1][2] = -1.;
+        mat[2][0] = 0.;
+        mat[2][1] = -1.;
+        mat[2][2] = 0.;
+    }
+    else if (j == 3) {
+        mat[0][0] = 1./16.;
+        mat[0][1] = 2./16.;
+        mat[0][2] = 1./16.;
+        mat[1][0] = 2./16.;
+        mat[1][1] = 4./16.;
+        mat[1][2] = 2./16.;
+        mat[2][0] = 1./16.;
+        mat[2][1] = 2./16.;
+        mat[2][2] = 1./16.;
+    }
+    else {
+        mat[0][0] = 0.;
+        mat[0][1] = 0.;
+        mat[0][2] = 0.;
+        mat[1][0] = 0.;
+        mat[1][1] = 1.;
+        mat[1][2] = 0.;
+        mat[2][0] = 0.;
+        mat[2][1] = 0.;
+        mat[2][2] = 0.;
+    }
+    
+    //KERNEL
     
     for(xx = 1; xx < bInfoHeader->width - 1; xx++)
     {
