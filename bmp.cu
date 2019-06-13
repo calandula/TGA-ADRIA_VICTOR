@@ -4,7 +4,6 @@
 #include <string.h>
 #include <math.h>
 #include <time.h>
-#define SIZE 32
 
 typedef struct bmpFileHeaderStruct {
   /* 2 bytes de identificación */
@@ -231,10 +230,11 @@ unsigned char *LoadBMP(char *filename, bmpInfoHeader *bInfoHeader, int i) {
 
   /* Leemos los datos de la imagen, tantos bytes como imgsize */
   fread(imgdata_h, bInfoHeader->imgsize,1, f);
+
+  N = bInfoHeader->imgsize;
   
   if (i == 1) {
-      nThreads = SIZE;
-      N = bInfoHeader->imgsize;
+      nThreads = 32;
       // numero de Blocks en cada dimension 
       uint32_t nBlocksWidth = bInfoHeader->width / nThreads;
       uint32_t nBlocksHeight = bInfoHeader->height / nThreads;
@@ -288,9 +288,7 @@ unsigned char *LoadBMP(char *filename, bmpInfoHeader *bInfoHeader, int i) {
       cudaFree(imgdata2_d);
   }
   else if (i == 2) {
-      // numero de Threads en cada dimension 
-    nThreads = SIZE;
-    N = bInfoHeader->imgsize;
+    nThreads = 1024;
     // numero de Blocks en cada dimension 
     nBlocks = N / nThreads;
   
@@ -343,10 +341,11 @@ unsigned char *LoadBMP(char *filename, bmpInfoHeader *bInfoHeader, int i) {
       //printf("Black&White took %f seconds to execute \n", time_taken);
   }
   else if (i == 3) {
+      nThreads = 32;
       float mat[9];
       float *mat_d;
-      //BW(imgdata_h, bInfoHeader);
-      int j = 3;
+      BW(imgdata_h, bInfoHeader);
+      int j = 2;
       if (j == 1) {
           mat[0] = -1.;
           mat[1] = -1.;
@@ -391,8 +390,6 @@ unsigned char *LoadBMP(char *filename, bmpInfoHeader *bInfoHeader, int i) {
           mat[7] = 0.;
           mat[8] = 0.;
       }
-      nThreads = SIZE;
-      N = bInfoHeader->imgsize;
       // numero de Blocks en cada dimension 
       uint32_t nBlocksWidth = bInfoHeader->width / nThreads;
       uint32_t nBlocksHeight = bInfoHeader->height / nThreads;
@@ -520,16 +517,22 @@ int main(int argc, char** argv) {
 
   unsigned char *image;
   
-  //int i;
-  
-  printf("introduce numero del 1 al 4\n1-blur\n2-black and white filter\n3-matriz de convolucion\n4-exit\n");
-  
   //scanf("%d", &i);
 
-  image = LoadBMP("./canicas.bmp", &header, 3);
+  /*image = LoadBMP("./canicas.bmp", &header, 2);
   //DisplayInfo("./canicas.bmp", &header);
 
-  SaveBMP("./auxmat.bmp", &header, image);
+  SaveBMP("./auxBW.bmp", &header, image);*/
+
+  image = LoadBMP("./canicas.bmp", &header, 1);
+  //DisplayInfo("./canicas.bmp", &header);
+
+  SaveBMP("./auxBlur.bmp", &header, image);
+
+  /*image = LoadBMP("./canicas.bmp", &header, 3);
+  //DisplayInfo("./canicas.bmp", &header);
+
+  SaveBMP("./auxMat.bmp", &header, image);*/
 
 }
 

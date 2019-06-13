@@ -24,7 +24,7 @@ void SaveBMP(char *filename, bmpInfoHeader *info, unsigned char *imgdata);
 unsigned char *LoadBMP(char *filename, bmpInfoHeader *bInfoHeader, int i);
 void blur(unsigned char *imgdata, bmpInfoHeader *bInfoHeader);
 void BW(unsigned char *imgdata, bmpInfoHeader *bInfoHeader);
-void ConvMat(unsigned char *imgdata, unsigned char *imgdata2, bmpInfoHeader *bInfoHeader, int j);
+void ConvMat(unsigned char *imgdata, unsigned char *imgdata2, bmpInfoHeader *bInfoHeader, int j, float mat[3][3]);
 bmpInfoHeader *createInfoHeader(uint32_t width, uint32_t height, uint32_t ppp);
 void DisplayInfo(char *Filename, bmpInfoHeader *info);
 
